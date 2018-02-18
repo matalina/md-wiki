@@ -12,9 +12,11 @@
 */
 
 Route::get('/', function () {
-    dd(auth()->user());
     return view('welcome');
 });
 
-Route::get('login/github', 'Auth\GithubController@redirectToProvider');
+Route::get('login/github', 'Auth\GithubController@redirectToProvider')->name('login.github');
 Route::get('login/github/callback', 'Auth\GithubController@handleProviderCallback');
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');
