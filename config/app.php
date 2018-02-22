@@ -13,7 +13,11 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'Laravel'),
+    'name' => env('APP_NAME', 'MD Reader'),
+    
+    'copyright' => env('COPYRIGHT',date('Y')),
+    'penname' => env('PENNAME',''),
+    'license' => env('LICENSE',''),
 
     /*
     |--------------------------------------------------------------------------

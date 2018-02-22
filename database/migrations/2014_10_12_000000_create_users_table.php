@@ -18,6 +18,8 @@ class CreateUsersTable extends Migration
             $table->string('pen_name')->nullable();
             $table->string('email')->unique();
             $table->string('password')->nullable();
+            
+            $table->boolean('is_owner')->default(0);
 
             // Cached from GitHub
             $table->string('github_id')->unique();

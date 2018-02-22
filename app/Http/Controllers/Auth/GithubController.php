@@ -10,11 +10,13 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 class GithubController extends Controller
 {
     use AuthenticatesUsers;
+    
     /**
      * Redirect the user to the GitHub authentication page.
      *
      * @return \Illuminate\Http\Response
      */
+    
     public function redirectToProvider()
     {
         $social = Socialite::driver('github');
@@ -41,7 +43,7 @@ class GithubController extends Controller
 
         auth()->login($authUser, true);
 
-        return redirect('home');
+        return redirect('/');
     }
 
     /**
@@ -55,12 +57,20 @@ class GithubController extends Controller
         if ($authUser = User::where('github_id', $githubUser->id)->first()) {
             return $authUser;
         }
-
+            
+        if((User::all())->isEmpty()) {
+            $isOwner = 1;
+        }
+        else {
+            $isOwner = 0;
+        }
+        
         return User::create([
             'name' => $githubUser->name,
             'email' => $githubUser->email,
             'github_id' => $githubUser->id,
-            'avatar' => $githubUser->avatar
+            'avatar' => $githubUser->avatar,
+            'is_owner' => $isOwner,
         ]);
     }
 }

@@ -1,14 +1,30 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
 use function htmlspecialchars;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use \Storage;
+use League\CommonMark\CommonMarkConverter;
+use App\Navigation;
+use \Mni\FrontYAML\Bridge\CommonMark\CommonMarkParser;
+use \Mni\FrontYAML\Parser;
 
 class PageController extends Controller
 {
+    protected $converter;
+    protected $nav;
+    protected $menu;
+    
+    public function __construct(Navigation $nav)
+    {
+        $parser = new Parser(null, new CommonMarkParser());
+        
+        $this->converter = $parser;
+        $this->navigation = $nav;
+        $this->menu = $this->navigation->get()->create();
+    }
     /**
      * Display a listing of the resource.
      *
@@ -46,13 +62,26 @@ class PageController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show($page)
+    public function show($page = null)
     {
-        $link = str_replace('+','/',htmlspecialchars($page)).'.md';
+       if($page == null) {
+           $link = 'home.md';
+       } 
+       else { 
+            $link = base64_decode($page).'.md'; 
+       }
 
         $contents = Storage::disk('notebook')->get($link);
+        
+        $document = $this->converter->parse($contents);
 
-        return response()->json($contents);
+        $yaml = $document->getYAML();
+        $html = $document->getContent();
+        
+        return view('welcome')
+            ->with('menu',$this->menu)
+            ->with('footer',$yaml)
+            ->with('page', $html);
     }
 
     /**

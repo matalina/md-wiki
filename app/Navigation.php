@@ -4,17 +4,43 @@ use Illuminate\Support\Collection;
 use Storage;
 
 class Navigation {
-    public function get() {
+    protected $items = null;
+    
+    public function get() 
+    {
         $disk = Storage::disk('notebook');
         $items = new Collection();
 
-        return $this->recursiveMenuCreation($disk, $items, '/');
+        $this->items = $this->recursiveMenuCreation($disk, $items, '/');
+        
+        return $this;
+    }
+    
+    public function create()
+    {
+        return view('layouts.menu')
+            ->with('items',$this->items);
     }
 
     protected function recursiveMenuCreation($disk, $items, $path)
     {
         $dirs = $disk->directories($path);
         $files = $disk->files($path);
+        
+         foreach($dirs as $dir) {
+            $segments = explode('/',$dir);
+            $uri = $segments[count($segments) - 1];
+            preg_match('/([0-9]*)\_?(.+)/', $uri, $match);
+            $new_dir = new Collection();
+            $new_dir = $this->recursiveMenuCreation($disk, $new_dir, $dir);
+            $name = str_replace('-', ' ', $match[2]);
+            $order = !empty($match[1])?$match[1]:$name;
+            $items->put($order, [
+                'name' => $name,
+                'uri' => $dir,
+                'folder' => $new_dir,
+            ]);
+        }
 
         foreach($files as $file) {
             $segments = explode('/',$file);
@@ -26,21 +52,7 @@ class Navigation {
             $order = !empty($match[1])?$match[1]:$name;
             $items->put($order, [
                 'name' => $name,
-                'link' => str_replace('/','+',$link_uri),
-            ]);
-        }
-
-        foreach($dirs as $dir) {
-            $segments = explode('/',$dir);
-            $uri = $segments[count($segments) - 1];
-            preg_match('/([0-9]*)\_?(.+)/', $uri, $match);
-            $new_dir = new Collection();
-            $new_dir = $this->recursiveMenuCreation($disk, $new_dir, $dir);
-            $name = str_replace('-', ' ', $match[2]);
-            $order = !empty($match[1])?$match[1]:$name;
-            $items->put($order, [
-                'name' => $name,
-                'folder' => $new_dir,
+                'link' => base64_encode($link_uri),
             ]);
         }
 
